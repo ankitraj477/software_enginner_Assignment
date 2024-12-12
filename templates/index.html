@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Train Seat Booking</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 50px auto;
+            padding: 20px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        .seats {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 10px;
+            justify-content: center;
+        }
+        .seat {
+            padding: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            background-color: #90ee90;
+            text-align: center;
+        }
+        .seat.booked {
+            background-color: #ff6347;
+            cursor: not-allowed;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background: #007bff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background: #0056b3;
+        }
+    </style>
+</head>
+<body>
+
+
+    <div class="container">
+        <div>
+            <label for="seats">Number of Seats:</label>
+            <input type="number" id="seats" min="1" max="7">
+            <button onclick="bookSeats()">Book Seats</button>
+        </div>
+        <p id="message"></p>
+        
+        <h1>Train Seat Booking</h1>
+        <div id="seatMap" class="seats"></div>
+        
+
+    </div>
+
+
+    <script>
+        async function loadSeats() {
+            const response = await fetch('/seats');
+            const data = await response.json();
+            const seatMap = document.getElementById('seatMap');
+            seatMap.innerHTML = '';
+            data.seats.forEach(seat => {
+                const seatDiv = document.createElement('div');
+                seatDiv.classList.add('seat');
+                if (seat.status === 'booked') seatDiv.classList.add('booked');
+                seatDiv.textContent = seat.seat;
+                seatMap.appendChild(seatDiv);
+            });
+        }
+
+        async function bookSeats() {
+            const seats = document.getElementById('seats').value;
+            if (!seats || seats < 1 || seats > 7) {
+                alert('Please enter a number between 1 and 7.');
+                return;
+            }
+
+            const response = await fetch('/book', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ seats: parseInt(seats) })
+            });
+
+            const data = await response.json();
+            const message = document.getElementById('message');
+
+            if (response.ok) {
+                message.textContent = `Seats booked: ${data.booked_seats.join(', ')}`;
+            } else {
+                message.textContent = `Error: ${data.error}`;
+            }
+
+            loadSeats();
+        }
+
+        document.addEventListener('DOMContentLoaded', loadSeats);
+    </script>
+</body>
+</html>
+
+
